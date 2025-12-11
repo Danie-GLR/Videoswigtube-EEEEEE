@@ -17,12 +17,42 @@ A simple web application for uploading and managing video files.
    npm install
    ```
 
-2. Start the server:
+2. **Option A - Start everything (recommended):**
+   ```bash
+   chmod +x start-all.sh
+   ./start-all.sh
+   ```
+   This starts both the upload server AND automatic video sync service.
+
+3. **Option B - Start services separately:**
+   
+   Start upload server:
    ```bash
    npm start
    ```
+   
+   Start auto-sync service (in another terminal):
+   ```bash
+   npm run sync
+   ```
+   
+   Or run sync once manually:
+   ```bash
+   node sync-videos.js
+   # OR
+   ./sync-videos.sh
+   ```
 
-3. Open your browser and navigate to `http://localhost:3000`
+4. Open your browser and navigate to `http://localhost:3000`
+
+## Automatic Video Sync
+
+The system automatically syncs videos from the [Videoswigtube-EEEEEE](https://github.com/Danie-GLR/Videoswigtube-EEEEEE) repository:
+
+- **Source**: `github.com/Danie-GLR/Videoswigtube-EEEEEE/videos/`
+- **Destination**: Local `videos/` folder
+- **Frequency**: Checks every 5 minutes for new videos
+- **Automatic**: Downloads only new videos (skips existing ones)
 
 ## Supported Video Formats
 
