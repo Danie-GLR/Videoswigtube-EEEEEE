@@ -56,6 +56,10 @@ function commitAndPushVideo(filename, originalName) {
     const videoPath = path.join('videos', filename);
     const timestamp = new Date().toISOString();
     
+    // Pull latest changes first to avoid conflicts
+    console.log(`   📥 Pulling latest changes...`);
+    execSync('git pull --rebase origin main', { cwd: __dirname, stdio: 'pipe' });
+    
     // Add the video file
     execSync(`git add "${videoPath}"`, { cwd: __dirname, stdio: 'pipe' });
     
@@ -69,7 +73,7 @@ function commitAndPushVideo(filename, originalName) {
     console.log(`   🚀 Pushed to repository: ${filename}`);
     return true;
   } catch (error) {
-    console.error(`   ⚠️  Git push failed: ${error.message}`);
+    console.error(`   ⚠️  Git operation failed: ${error.message}`);
     return false;
   }
 }
