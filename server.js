@@ -3,6 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,6 +50,30 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// Helper function to commit and push video
+function commitAndPushVideo(filename, originalName) {
+  try {
+    const videoPath = path.join('videos', filename);
+    const timestamp = new Date().toISOString();
+    
+    // Add the video file
+    execSync(`git add "${videoPath}"`, { cwd: __dirname, stdio: 'pipe' });
+    
+    // Commit with descriptive message
+    const commitMessage = `Auto-upload: ${originalName}\n\nUploaded at: ${timestamp}\nSaved as: ${filename}`;
+    execSync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`, { cwd: __dirname, stdio: 'pipe' });
+    
+    // Push to remote
+    execSync('git push origin main', { cwd: __dirname, stdio: 'pipe' });
+    
+    console.log(`   🚀 Pushed to repository: ${filename}`);
+    return true;
+  } catch (error) {
+    console.error(`   ⚠️  Git push failed: ${error.message}`);
+    return false;
+  }
+}
+
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
@@ -66,13 +91,17 @@ app.post('/upload', upload.single('video'), (req, res) => {
 
     console.log(`✅ Video uploaded: ${req.file.filename} (${(req.file.size / (1024 * 1024)).toFixed(2)} MB)`);
 
+    // Auto-commit and push to repository
+    const pushed = commitAndPushVideo(req.file.filename, req.file.originalname);
+
     res.json({
       message: 'Video uploaded successfully!',
       filename: req.file.filename,
       originalName: req.file.originalname,
       size: req.file.size,
       path: req.file.path,
-      savedTo: 'videos/' + req.file.filename
+      savedTo: 'videos/' + req.file.filename,
+      pushedToGit: pushed
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -92,6 +121,9 @@ app.post('/api/upload', upload.single('video'), (req, res) => {
 
     console.log(`✅ API Upload: ${req.file.filename} from ${req.ip}`);
 
+    // Auto-commit and push to repository
+    const pushed = commitAndPushVideo(req.file.filename, req.file.originalname);
+
     res.json({
       success: true,
       message: 'Video uploaded successfully!',
@@ -100,7 +132,8 @@ app.post('/api/upload', upload.single('video'), (req, res) => {
         originalName: req.file.originalname,
         size: req.file.size,
         savedTo: 'videos/' + req.file.filename,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        pushedToGit: pushed
       }
     });
   } catch (error) {
